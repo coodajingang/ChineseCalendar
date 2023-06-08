@@ -524,13 +524,15 @@ export function calendarDayInfo(year, month, day, lang) {
     console.log(cyear)
     console.log(firstMonth)
     console.log(langVars)
+    console.log(calVars)
 
-    let dayInfo = calMonthDay(day, month, lang, year, cyear, firstMonth, langVars, calVars); 
-    //console.log(dayInfo)
+    let dayInfo = calMonthDay(day, month - 1, lang, year, cyear, firstMonth, langVars, calVars); 
+    console.log(dayInfo)
     // for (let m=0; m<12; m++) {
     //     txt += printMonth(m, lang, year, cyear, firstMonth, 
     //                                 langVars, calVars);
     // }
+
     
     // week 
     // nongli 
@@ -778,17 +780,16 @@ function addYearInfo(y, langVars, calVars) {
 
 function calMonthDay(d,m,lang, year, cyear, firstMonth, langVars, calVars) {
     let result = {}
-    let cmon = addChineseMonths(m, lang, year, cyear, langVars, calVars);
+    let cmon = calChineseMonths(d, m, lang, year, cyear, langVars, calVars);
     let nMonth=cmon.nMonth, cmyear=cmon.cmyear, cmonth=cmon.cmonth;
     let yearc = year.toString();
     if (year < 1) {
         yearc = (lang==0 ? (1-year).toString()+' BCE':'前'+(1-year).toString());
     }
     if (lang != 0) yearc += '年';
+
+    console.log(cmon)
     
-    let txt='<table>';
-
-
     // 通过当月首日jd + 3 mod 7 得到首月星期
     // Determine the day of week of the first date of month
     let week1 = (calVars.jd0 + calVars.mday[m] + 3) % 7;
@@ -796,27 +797,30 @@ function calMonthDay(d,m,lang, year, cyear, firstMonth, langVars, calVars) {
     // mday 存放有个月的天数，根据上个月-下个月得出当月天数
     // # of days in the months
     let n = calVars.mday[m+1] - calVars.mday[m];
-    let week = (d + i - 1) % 7;
+    let week = (week1 + d - 1) % 7
 
-    let nontliDay = calChineseDate(year,m,d, lang, langVars, calVars, firstMonth);
+    let nongliDay = calChineseDate(year,m,d, lang, langVars, calVars, firstMonth);
     let jd = calSexagenaryDays(m, d, langVars, calVars);
 
     let hDay = langVars.heaven[(jd-1) % 10];
     let eDay = langVars.earth[(jd+1) % 12];
 
 
-    txt += addMoonPhases(m, lang, langVars, calVars);
-    txt += add24solterms(m, lang, langVars, calVars);
-    if (year < 1734) {
-        //add calendrical solar terms
-        txt += addCalSolterms(m, lang, langVars, calVars, 0);
-        // add Datong solar terms in 1666-1670
-        if (year > 1665.5 && year < 1670.5 && langVars.region=='default') {
-            txt += addCalSolterms(m, lang, langVars, calVars, 1);
-        }
-    }
-    
-    return txt;
+    let moonPhases = calMoonPhases(m, lang, langVars, calVars);
+    let solars = cal24solterms(m, lang, langVars, calVars);
+
+    result.jd = jd;
+    result.week = week;
+    result.gan = hDay;
+    result.zhi = eDay;
+    result.moon = moonPhases;
+    result.solar = solars;
+    result.nontli = nongliDay
+    result.year = year
+    result.month = m
+    result.day = d
+    result.date = year + '-' + m + '-' + d
+    return result;
 }
 
 // Print the table for one Gregorian/Julian month
@@ -911,8 +915,7 @@ function printMonth(m,lang, year, cyear, firstMonth, langVars, calVars) {
 // after the second day of this month and before the 
 // first date of the next month.
 // Also calculate the sexagenary month cycle for years > -480.
-function addChineseMonths(m, lang, y, cyear, langVars, 
-                           calVars) {
+function addChineseMonths(m, lang, y, cyear, langVars, calVars) {
     let i;
     let txt = ['leap ', '閏', '闰'];
     let leap = txt[lang];
@@ -1074,6 +1077,179 @@ function addChineseMonths(m, lang, y, cyear, langVars,
     return {nMonth:nMonth, cmonth:cmonth, cmyear:cmyear};
 }
 
+function calChineseMonths(d, m, lang, y, cyear, langVars, calVars) {
+  let i;
+  let txt = ["leap ", "閏", "闰"];
+  let leap = txt[lang];
+  if (y == -104) {
+    txt = ["post ", "後", "后"];
+    leap = txt[lang];
+  }
+  if (y < -104) {
+    leap = calVars.leap;
+    if (lang == 1) {
+      leap = calVars.leap == "post 9" ? "後九" : "閏";
+    }
+    if (lang == 2) {
+      leap = calVars.leap == "post 9" ? "后九" : "闰";
+    }
+  }
+  let m0 = calVars.mday[m];
+  let m1 = calVars.mday[m + 1];
+
+  // Sexagenary year cycle for year y-1
+  //let adj = (y > 10 ? 0:60*Math.floor(-y/60 + 2));
+  let ihy1 = (y + 725) % 10;
+  if (ihy1 < 0) {
+    ihy1 += 10;
+  }
+
+  let nMonth = 1,
+    j,
+    tmp,
+    cm,
+    jian;
+  let cmonth = [],
+    cmyear = [];
+  // Determine the Chinese month on the first day of
+  // this Gregorian/Julian month
+  let n = calVars.cmonthDate.length;
+  for (i = 0; i < n; i++) {
+    if (calVars.cmonthDate[i] <= m0 + 1 && calVars.cmonthDate[i + 1] > m0 + 1) {
+      cm = calVars.cmonthNum[i];
+      jian = calVars.cmonthJian[i];
+      // sexagenary month cycle
+      let cmsex = "";
+      if (cm > 0 && y > -104) {
+        if (lang != 0) {
+          cmsex = "建";
+        }
+        let mm = 12 * (ihy1 + calVars.cmonthXiaYear[i]) + jian;
+        mm = (mm + 1) % 10;
+        cmsex += langVars.heaven[mm];
+        if (lang == 0) cmsex += " ";
+        cmsex += langVars.earth[(jian + 1) % 12];
+        if (lang == 0) {
+          cmsex = ", " + cmsex;
+        } else {
+          cmsex = " (" + cmsex + ")";
+        }
+      }
+      if (y <= -104) {
+        if ("noZhong" in calVars) {
+          if (calVars.noZhong == i) {
+            if (lang == 0) {
+              cmsex = ", no Zh&#333;ngq&#236;";
+            } else if (lang == 1) {
+              cmsex = " (無中氣)";
+            } else {
+              cmsex = " (无中气)";
+            }
+          }
+        }
+      }
+      if (lang == 0) {
+        tmp = "month: ";
+        if (cm > 0) {
+          tmp += cm;
+        } else {
+          tmp += y >= -104 ? leap + -cm : leap;
+        }
+        tmp += " (" + langVars.monthL[calVars.cmonthLong[i]] + cmsex + ")";
+      } else {
+        if (cm > 0) {
+          tmp = langVars.cmonth[cm - 1];
+        } else {
+          tmp = y >= -104 ? leap + langVars.cmonth[-cm - 1] : leap;
+        }
+
+        if (y > 688 && y < 700 && Math.abs(cm) == 11) {
+          // 11 yue -> zheng yue
+          tmp = "正";
+        }
+        if (y > 689 && y < 701 && Math.abs(cm) == 1) {
+          // zheng yue -> yi yue
+          tmp = "一";
+        }
+        tmp += "月" + langVars.monthL[calVars.cmonthLong[i]] + cmsex;
+      }
+      cmonth.push(tmp);
+      tmp = cyear[calVars.cmonthYear[i]];
+      if (lang == 0) tmp = "year: " + tmp + ", ";
+      cmyear.push(tmp);
+      j = i + 1;
+      break;
+    }
+  }
+  for (i = j; i < n; i++) {
+    let d1 = calVars.cmonthDate[i];
+    if (d1 > m0 + 1 && d1 <= m1) {
+      nMonth++;
+      cm = calVars.cmonthNum[i];
+      jian = calVars.cmonthJian[i];
+      // sexagenary month cycle
+      let cmsex = "";
+      if (cm > 0 && y > -104) {
+        if (lang != 0) {
+          cmsex = "建";
+        }
+        let mm = 12 * (ihy1 + calVars.cmonthXiaYear[i]) + jian;
+        mm = (mm + 1) % 10;
+        cmsex += langVars.heaven[mm];
+        if (lang == 0) cmsex += " ";
+        cmsex += langVars.earth[(jian + 1) % 12];
+        if (lang == 0) {
+          cmsex = ", " + cmsex;
+        } else {
+          cmsex = " (" + cmsex + ")";
+        }
+      }
+      if (y <= -104) {
+        if ("noZhong" in calVars) {
+          if (calVars.noZhong == i) {
+            if (lang == 0) {
+              cmsex = ", no Zh&#333;ngq&#236;";
+            } else if (lang == 1) {
+              cmsex = " (無中氣)";
+            } else {
+              cmsex = " (无中气)";
+            }
+          }
+        }
+      }
+      if (lang == 0) {
+        tmp = "month: ";
+        if (cm > 0) {
+          tmp += cm;
+        } else {
+          tmp += y >= -104 ? leap + -cm : leap;
+        }
+        tmp += " (" + langVars.monthL[calVars.cmonthLong[i]] + cmsex + ")";
+      } else {
+        if (cm > 0) {
+          tmp = langVars.cmonth[cm - 1];
+        } else {
+          tmp = y >= -104 ? leap + langVars.cmonth[-cm - 1] : leap;
+        }
+        if (y > 688 && y < 700 && Math.abs(cm) == 11) {
+          // 11 yue -> zheng yue
+          tmp = "正";
+        }
+        if (y > 689 && y < 701 && Math.abs(cm) == 1) {
+          // zheng yue -> yi yue
+          tmp = "一";
+        }
+        tmp += "月" + langVars.monthL[calVars.cmonthLong[i]] + cmsex;
+      }
+      cmonth.push(tmp);
+      tmp = cyear[calVars.cmonthYear[i]];
+      if (lang == 0) tmp = "year: " + tmp + ", ";
+      cmyear.push(tmp);
+    }
+  }
+  return { nMonth: nMonth, cmonth: cmonth, cmyear: cmyear };
+}
+
 function calChineseDate(y, m, d, lang, langVars, calVars, firstMonth) {
     // dd = 当年的天序数
     // # of days from Dec 31 in the previous year
@@ -1144,7 +1320,7 @@ function calChineseDate(y, m, d, lang, langVars, calVars, firstMonth) {
             // zheng yue -> yi yue
             m1 = '一月';
         }
-       return m1+langVars.date_numChi[cd-1]
+       return m1 + langVars.monthL[longM] + langVars.date_numChi[cd-1]
     }
 
 }
@@ -1277,6 +1453,106 @@ function addSexagenaryDays(m,d,langVars, calVars) {
     return txt;
 }
 
+function calMoonPhases(m,lang,langVars, calVars) {
+    let m0 = calVars.mday[m];
+    let m1 = calVars.mday[m+1];
+    let i, dd, h;
+    
+    let phases = [];
+    // new moon
+    let name = '['+langVars.Qnames[0]+'] ';
+    let n = calVars.Q0.length;
+    for (i=0; i<n; i++) {
+        dd = Math.floor(calVars.Q0[i]);
+        if (dd > m0 && dd <= m1) {
+            let ec = '-';
+            calVars.sol_eclipse.forEach(function(e) {
+                if (Math.abs(dd - e[0]) < 5) {
+                    let ybeg = 1 + 100*Math.floor(0.01*(calVars.year - 0.5));
+                    if (calVars.year==ybeg && e[1] > 200) {
+                        ybeg -= 100;
+                    } else if (calVars.year-ybeg==99 && e[1] < 200){
+                        ybeg += 100;
+                    }
+                    let type;
+                    let linkg = 'http://ytliu.epizy.com/eclipse/';
+                    if (lang==0) {
+                        type = ['Partial solar eclipse', 'Annular solar eclipse', 'Total solar eclipse', 'Hybrid solar eclipse'];
+                    } else if (lang==1) {
+                        type = ['日偏食', '日環食', '日全食', '日全環食'];
+                    } else {
+                        type = ['日偏食', '日环食', '日全食', '日全环食'];
+                    }
+                    linkg += 'one_solar_eclipse_general.html?ybeg='+ybeg+'&ind='+e[1]+'&ep=DE431';
+                    ec = '<a href="'+linkg+'" target="_blank">'+type[e[2]]+'</a>';
+                }
+            });
+            phases.push({phase:name, time:calVars.Q0[i]-m0, ec:ec});
+        }
+    }
+    // first quarter 
+    name = '['+langVars.Qnames[1]+'] ';
+    n = calVars.Q1.length;
+    for (i=0; i<n; i++) {
+        dd = Math.floor(calVars.Q1[i]);
+        if (dd > m0 && dd <= m1) {
+            phases.push({phase:name, time:calVars.Q1[i]-m0, ec:'-'});
+        }
+    }
+    // full moon
+    name = '['+langVars.Qnames[2]+'] ';
+    n = calVars.Q2.length;
+    for (i=0; i<n; i++) {
+        dd = Math.floor(calVars.Q2[i]);
+        if (dd > m0 && dd <= m1) {
+            let ec = '-';
+            calVars.lun_eclipse.forEach(function(e) {
+                if (Math.abs(dd - e[0]) < 5) {
+                    let ybeg = 1 + 100*Math.floor(0.01*(calVars.year - 0.5));
+                    let type;
+                    let linkg = 'http://ytliu.epizy.com/eclipse/';
+                    if (lang==0) {
+                        type = ['Penumbral lunar eclipse', 'Partial lunar eclipse', 'Total lunar eclipse'];
+                    } else {
+                        type = ['半影月食', '月偏食', '月全食'];
+                    }
+                    linkg += 'one_lunar_eclipse_general.html?ybeg='+ybeg+'&shrule=Danjon&ind='+e[1]+'&ep=DE431';
+                    ec = '<a href="'+linkg+'" target="_blank">'+type[e[2]]+'</a>';
+                }
+            });
+            phases.push({phase:name, time:calVars.Q2[i]-m0, ec:ec});
+        }
+    }
+    // third quarter
+    name = '['+langVars.Qnames[3]+'] ';
+    n = calVars.Q3.length;
+    for (i=0; i<n; i++) {
+        dd = Math.floor(calVars.Q3[i]);
+        if (dd > m0 && dd <= m1) {
+            phases.push({phase:name, time:calVars.Q3[i]-m0, ec:'-'});
+        }
+    }
+    
+    // sort events in chronological order
+    phases.sort((a,b) => a.time - b.time);
+    
+    // Correct for Gregorian calendar reform
+    // Oct 1582 has only 21 days; The day after Oct 4 was Oct 15
+    n = phases.length;
+    if (m1-m0 < 25) {
+        for (i=0; i<n; i++) {
+            phases[i].time += (phases[i].time >= 5.0 ? 10.0:0.0);
+        }
+    }
+    
+    for (i=0; i<n; i++) {
+        let h = 24.0*(phases[i].time - Math.floor(phases[i].time));
+        phases[i].timestr = convertTime(h)
+        phases[i].day = Math.floor(phases[i].time)
+    }
+    return phases;
+}
+
 function addMoonPhases(m,lang,langVars, calVars) {
     let m0 = calVars.mday[m];
     let m1 = calVars.mday[m+1];
@@ -1390,6 +1666,30 @@ function addMoonPhases(m,lang,langVars, calVars) {
     return txt;
 }
 
+function cal24solterms(m,lang,langVars, calVars) {
+    let m0 = calVars.mday[m];
+    let m1 = calVars.mday[m+1];
+
+    let result = []
+    
+    for (let i=0; i<calVars.solar.length; i++) {
+        let dd = Math.floor(calVars.solar[i]);
+        if (dd > m0 && dd <= m1) {
+            let solar = new Object();
+            solar.name = langVars.soltermNames[i]
+            let h = 24.0*(calVars.solar[i] - dd);
+            let d = dd - m0;
+            if (m1-m0 < 25) {
+               d += (d > 4 ? 10:0);
+            }
+            solar.day = d;
+            solar.time = convertTime(h)
+            result.push(solar)
+        }
+    }
+    return result;
+}
+
 function add24solterms(m,lang,langVars, calVars) {
     let m0 = calVars.mday[m];
     let m1 = calVars.mday[m+1];
@@ -1435,6 +1735,72 @@ function add24solterms(m,lang,langVars, calVars) {
     txt += '</p>';
     
     return txt;
+}
+
+function calCalSolterms(m,lang,langVars, calVars, datong) {
+    let solar;
+    if (calVars.year >= -104) {
+        if ('pingqi' in calVars) {
+            solar = calVars.pingqi;
+        } else {
+            if (datong==0) {
+                let calSolTerms = calendricalSolarTerms();
+                let ind = calVars.year - calendricalSolarTerms_ystart();
+                solar = calSolTerms[ind];
+                // decompress
+                let n = solar.length;
+                for (let i=1; i<n; i++) { 
+                    solar[i] += solar[i-1]+14;
+                }
+                // solar contains all the 24 solar terms in year y, starting from 
+                // J12 (Xiaohan) to Z11 (winter solstice). It stores the dates 
+                // of the solar terms counting from Dec. 31, y-1 at 0h (UTC+8).
+                // Add one more to solar if J12 occurs before Jan 3.
+                if (solar[0] < 3) {
+                    solar.push(calSolTerms[ind+1][0] + NdaysGregJul(calVars.year));
+                }
+                calSolTerms = null;
+            } else {
+                solar = datongSolarTerms(calVars.year);
+            }
+        }
+    } else {
+        if ('pingqi' in calVars) {
+            solar = calVars.pingqi;
+        } else {
+            return '';
+        }
+    }
+    
+    let m0 = calVars.mday[m];
+    let m1 = calVars.mday[m+1];
+    let txt = ''; 
+    let split = false;
+    if (calVars.year==1666 && m > 0.5 && langVars.region=='default') { split=true;}
+    if (calVars.year > 1666 && calVars.year < 1670 && langVars.region=='default') { split=true;}
+    if (calVars.year==1670 && m < 1.5  && langVars.region=='default') { split=true;}
+    let result = []
+
+    if (solar.length > 0) {
+        let empty = 1;
+        for (let i=0; i<solar.length; i++) {
+            let dd = solar[i];
+            if (dd > m0 && dd <= m1) {
+                let s = new Object()
+                s.name = langVars.soltermNames[i]
+                let d = dd - m0;
+                // Correct for Gregorian calendar reform
+                // Oct 1582 has only 21 days; The day after Oct 4 was Oct 15
+                if (m1-m0 < 25) {
+                   d += (d > 4 ? 10:0);
+                }
+                s.day = d;
+                result.push(s);
+            }
+        }
+    }
+    
+    return result;
 }
 
 // Add calendrical solar terms
@@ -1574,6 +1940,14 @@ function convertHM(h) {
     let mm = Math.floor(60.0*(h1-hh));
     hh = '0'+hh; mm = '0'+mm;
     return hh.slice(-2)+'<sup>h</sup>'+mm.slice(-2)+'<sup>m</sup>';
+}
+
+function convertTime(h) {
+    let h1 = h + 0.5/60.0;
+    let hh = Math.floor(h1);
+    let mm = Math.floor(60.0*(h1-hh));
+    hh = '0'+hh; mm = '0'+mm;
+    return hh.slice(-2)+':'+mm.slice(-2)+':00';
 }
 
 // day from Dec 31, y-1 -> m, d (assume day > 0)

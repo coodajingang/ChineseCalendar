@@ -5,7 +5,7 @@
   "main": "index.js",
   "private": true,
   "scripts": {
-    "build": "webpack", 
+    "build": "webpack",
     "build_old": "node build.js all",
     "part": "node build.js",
     "clean": "node build.js clean",
