@@ -1,7 +1,6 @@
 "use strict";
-import { NdaysGregJul, getJD , get_Western_calendar_name} from "./utilities";
 
-export function mod2pi_de(x) {
+function mod2pi_de(x) {
     return x - 2*Math.PI*Math.floor(0.5*x/Math.PI + 0.5);
 }
 
@@ -11,7 +10,7 @@ export function mod2pi_de(x) {
 // Return the uncompressed solar-term times in terms of md = 1441*d+m, 
 //   where d is the number of days from Jan 0 in year y and m is the 
 //   number of minutes from the midnight (UT1+8/UTC+8) of d.
-export function decompress_solarTerms(y, istart, offset_comp, solar_comp) {
+function decompress_solarTerms(y, istart, offset_comp, solar_comp) {
     let jd0 = getJD(y-1,12,31) - 1.0/3;
     let delta_T = DeltaT( (jd0-2451545 + 365.25*0.5)/36525);
     let offset = 2451545 - jd0 - delta_T;
@@ -71,7 +70,7 @@ export function decompress_solarTerms(y, istart, offset_comp, solar_comp) {
 // Return the uncompressed moon-phase times in terms of md = 1441*d+m, 
 //   where d is the number of days from Jan 0 in year y and m is the 
 //   number of minutes from the midnight (UT1+8/UTC+8) of d.
-export function decompress_moonPhases(y, offset_comp, lunar_comp, dp) {
+function decompress_moonPhases(y, offset_comp, lunar_comp, dp) {
     let w = [2*Math.PI, 6.733776, 13.467552, 0.507989,                  0.0273143, 0.507984, 20.201328, 6.225791, 7.24176, 5.32461,           12.058386, 0.901181, 5.832595, 12.56637061435917, 19.300146,           11.665189, 18.398965, 6.791174, 13.636974, 1.015968, 6.903198,         13.07437, 1.070354, 6.340578614359172];
     let poly_coefs, amp, ph, i;
     if (y > 2500) {
@@ -147,7 +146,7 @@ export function decompress_moonPhases(y, offset_comp, lunar_comp, dp) {
 // http://astro.ukho.gov.uk/nao/lvm/
 // Coefficients after 2010 have been modified to include data beyond 2019.
 // Return Delat T in seconds
-export function DeltaT_spline_y(y) {    
+function DeltaT_spline_y(y) {    
     // Integrated lod (deviation of mean solar day from 86400s) equation:
     // From http://astro.ukho.gov.uk/nao/lvm/:
     // lod = 1.72 t − 3.5 sin(2*pi*(t+0.75)/14) in ms/day, where t = (y - 1825)/100
@@ -190,7 +189,7 @@ export function DeltaT_spline_y(y) {
     return dT;
 }
 
-export function DeltaT(T) {
+function DeltaT(T) {
     let jd = 36525*T + 2451545;
     if (jd > 2460310.5 || jd < 2441317.5) {
         let y = (jd >= 2299160.5 ? (jd - 2451544.5)/365.2425 + 2000:(jd + 0.5)/365.25 - 4712);

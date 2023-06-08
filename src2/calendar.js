@@ -1,12 +1,73 @@
 "use strict";
-import { split_calendar_handler } from "./split";
-import { NdaysGregJul, getJD , get_Western_calendar_name} from "./utilities";
-import { solarTermMoonPhase_ystart,offsets_sunMoon ,solarTerms, newMoons,firstQuarters,fullMoons,thirdQuarters ,ChineseToGregorian} from "./calendarData"
-import { decompress_moonPhases, decompress_solarTerms } from "./decompressSunMoonData"
-import { eclipse_year_range,solar_eclipse_link,lunar_eclipse_link } from "./eclipse_linksM722-2202";
-import { eraName} from "./eras"
 
+function init(lang) {
+    if (window.location === window.parent.location) {
+        document.getElementById("wrapper0").style.display = "block";
+        header(lang,'calendar', 'index'); // print menu
+        let year = 99999999;
+        let input = document.getElementById('year');
+        // Get input from url
+        const p = new URLSearchParams(window.location.search);
+        if (p.has('y')) {
+            year = parseInt(p.get('y'), 10);
+        }
+        if (isNaN(year) || year < -721 || year > 2200) {
+        let d = new Date(); // current time from computer's clock
+        year = d.getFullYear();
+        }
+        input.value = year;
+        input.addEventListener('keyup', function(event) {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                document.getElementById('myBtn').click();
+            }
+        });
+        if (p.has('showJD')) {
+            if (p.get('showJD')=='true') {
+                document.getElementById('Julian1').checked = true;
+                document.getElementById('Julian0').checked = false;
+            }
+        }
+        submitYear(lang);
+    } else {
+        exception_handler();
+    } 
+    // *** TEST ***
+    //outputContent_forTesting_allYears_default(lang);
+    //outputContent_forTesting_period(lang, 'SpringWarring');
+    //outputContent_forTesting_period(lang, 'ShuWu');
+    //outputContent_forTesting_period(lang, 'SouthNorth');
+    //outputContent_forTesting_period(lang, 'LiaoJinYuan');
+    // ***
+}
 
+function submitYear(lang) {
+    document.getElementById('err').innerHTML = "";
+    let year = parseInt(document.getElementById('year').value, 10);
+    if (isNaN(year) || year < -721 || year > 2200) {
+        let message = ['Invalid input! Please enter an integer between -721 and 2200.', 
+        '輸入錯誤﹗請輸入包括 -721 和 2200 之間的整數。','输入错误！请输入包括 -721 和 2200 之间的整数。'];
+        document.getElementById('err').innerHTML = message[lang];
+    } else {
+        if (year < -220) {
+           ancient_calendar_handler(lang, year);
+        } else {
+            document.getElementById("Spring").style.display = "none"; 
+            document.getElementById("Warring").style.display = "none"; 
+        }
+        calendar(lang, year);
+    }
+}
+
+// Show/hide between show/hide Jilian day number at noon
+function showHideJulian(lang,ins) {
+    let s = parseInt(ins, 10);
+    document.getElementById('Julian'+ins).checked = true;
+    document.getElementById('Julian'+(1-s)).checked = false;
+    if (document.getElementById('err').innerHTML == '') {
+        submitYear(lang);
+    }
+}
 
 // Language-specific constants
 function langConstant(lang) {
@@ -124,13 +185,13 @@ function langConstant(lang) {
         note1929 = note1929Sim;
         note1914 = note1914Sim;
     }
-    let julian = false; 
-    // try {
-    //     julian = document.getElementById('Julian1').checked;
-    // }
-    // catch (err) {
-    //     julian = false;
-    // }
+    let julian; 
+    try {
+        julian = document.getElementById('Julian1').checked;
+    }
+    catch (err) {
+        julian = false;
+    }
     return {gMonth:gMonth, weeks:weeks, lang:lang, heaven:heaven, earth:earth, animal:animal, region:'default', cmonth:month_num, monthL:monthL, Qnames:Qnames, soltermNames:soltermNames, julian:julian, li_ancient:null, 
     date_numChi:date_numChi, note_early:note_early, 
     note_late:note_late, note1929:note1929, note1914:note1914};
@@ -452,102 +513,12 @@ function sortMonths(cmdate) {
     return {cmonthDate:cmonthDate, cmonthNum:cmonthNum};
 }
 
-export function calendarDayInfo(year, month, day, lang) {
-    let langVars = langConstant(lang);
-    langVars.region = split_calendar_handler(lang,year);
-    let calVars = calDataYear(year, langVars);
-    // How many Chinese years does this Gregorian/Julian calendar span?
-    let n = calVars.cmonthDate.length;
-    let Ncyear = calVars.cmonthYear[n-1] - calVars.cmonthYear[0] + 1;
-    
-    // Determine the date(s) of the Chinese new year
-    let i,j,k,mm,dd;
-    let mm1 = [], dd1 = [];
-    let firstMonth = [0,0,0];
-    for (i=0; i<3; i++) {
-       if (year > -110) {
-           firstMonth[i] = firstMonthNum(year-1+i);
-       } else {
-           firstMonth[i] = calVars.firstMonthNum;
-       }
-    }
-    for (i=1; i<Ncyear; i++) {
-        let firstMon = firstMonth[calVars.cmonthYear[0] + i];
-        for(j=1; j<n; j++) {
-            if (calVars.cmonthYear[j]==calVars.cmonthYear[0]+i && 
-                calVars.cmonthNum[j]==firstMon) {
-                dd = calVars.cmonthDate[j];
-                for (k=0; k<13; k++) {
-                    if (dd <= calVars.mday[k]) {
-                        mm = k;
-                        break;
-                    }
-                }
-                mm1.push(mm); dd1.push(dd - calVars.mday[mm-1]);
-            }
-        }
-    }
-    
-    let ih0 = (year + 725) % 10;
-    let ie0 = (year + 727) % 12;
-    if (ih0 < 0) { ih0 += 10;}
-    if (ie0 < 0) { ie0 += 12;}
-    let cyear = [" ", " ", " "];
-    cyear[0] = langVars.heaven[ih0]+' '+langVars.earth[ie0]+' ('+langVars.animal[ie0]+')';
-    let ih = (year + 726) % 10;
-    let ie = (year + 728) % 12;
-    if (ih < 0) { ih += 10;}
-    if (ie < 0) { ie += 12;}
-    cyear[1] = langVars.heaven[ih]+' '+langVars.earth[ie]+' ('+langVars.animal[ie]+')';
-    let ih2 = (year + 727) % 10;
-    let ie2 = (year + 729) % 12;
-    if (ih2 < 0) { ih2 += 10;}
-    if (ie2 < 0) { ie2 += 12;}
-    cyear[2] = langVars.heaven[ih2]+' '+langVars.earth[ie2]+' ('+langVars.animal[ie2]+')';
-    let gcal = (year > 1582 ? "Gregorian":(year > 7 ? "Julian":"(Proleptic) Julian"));
-    if (year==1582) { gcal = "Gregorian/Julian";}
-    let yearc = year.toString();
-    if (year < 1) {
-        yearc += (lang==0 ? ' ('+(1-year)+' BCE)':' (前'+(1-year)+')');
-    }
-    
-    if (lang==0) {
-        cyear[0] = langVars.heaven[ih0]+' '+langVars.earth[ie0];
-        cyear[1] = langVars.heaven[ih]+' '+langVars.earth[ie];
-        cyear[2] = langVars.heaven[ih2]+' '+langVars.earth[ie2];
-    } else {
-        cyear[0] = langVars.heaven[ih0]+langVars.earth[ie0]+'年';
-        cyear[1] = langVars.heaven[ih]+langVars.earth[ie]+'年';
-        cyear[2] = langVars.heaven[ih2]+langVars.earth[ie2]+'年';
-    }
-    
-    console.log(cyear)
-    console.log(firstMonth)
-    console.log(langVars)
-
-    let dayInfo = calMonthDay(day, month, lang, year, cyear, firstMonth, langVars, calVars); 
-    //console.log(dayInfo)
-    // for (let m=0; m<12; m++) {
-    //     txt += printMonth(m, lang, year, cyear, firstMonth, 
-    //                                 langVars, calVars);
-    // }
-    
-    // week 
-    // nongli 
-    // ganzhi 
-    // 月相
-    // 节气
-    // 时干支
-}
-
 // Set up the calendar for the Gregorian/Julian year
-export function calendar(lang, year) {
+function calendar(lang, year) {
     let langVars = langConstant(lang);
     langVars.region = split_calendar_handler(lang,year);
     let calVars = calDataYear(year, langVars);
     let txt = '';
-
-    console.log(calVars)
     
     // How many Chinese years does this Gregorian/Julian calendar span?
     let n = calVars.cmonthDate.length;
@@ -671,17 +642,13 @@ export function calendar(lang, year) {
         let h3 = (lang==0 ? '<h3 style="color:brown;line-height:26px;">':'<h3 style="color:brown;letter-spacing:4px;line-height:30px;">');
         txt += h3+info+'</h3><br /><br />';
     }
-    console.log(info)
-    console.log(cyear)
-    console.log(firstMonth)
-    console.log(langVars)
+    
     for (let m=0; m<12; m++) {
         txt += printMonth(m, lang, year, cyear, firstMonth, 
                                     langVars, calVars);
     }
     
-    // document.getElementById('calendar').innerHTML = txt;
-    //console.log(txt)
+    document.getElementById('calendar').innerHTML = txt;
 }
 
 function addYearInfo(y, langVars, calVars) {
@@ -776,49 +743,6 @@ function addYearInfo(y, langVars, calVars) {
     return info;
 }
 
-function calMonthDay(d,m,lang, year, cyear, firstMonth, langVars, calVars) {
-    let result = {}
-    let cmon = addChineseMonths(m, lang, year, cyear, langVars, calVars);
-    let nMonth=cmon.nMonth, cmyear=cmon.cmyear, cmonth=cmon.cmonth;
-    let yearc = year.toString();
-    if (year < 1) {
-        yearc = (lang==0 ? (1-year).toString()+' BCE':'前'+(1-year).toString());
-    }
-    if (lang != 0) yearc += '年';
-    
-    let txt='<table>';
-
-
-    // 通过当月首日jd + 3 mod 7 得到首月星期
-    // Determine the day of week of the first date of month
-    let week1 = (calVars.jd0 + calVars.mday[m] + 3) % 7;
-    
-    // mday 存放有个月的天数，根据上个月-下个月得出当月天数
-    // # of days in the months
-    let n = calVars.mday[m+1] - calVars.mday[m];
-    let week = (d + i - 1) % 7;
-
-    let nontliDay = calChineseDate(year,m,d, lang, langVars, calVars, firstMonth);
-    let jd = calSexagenaryDays(m, d, langVars, calVars);
-
-    let hDay = langVars.heaven[(jd-1) % 10];
-    let eDay = langVars.earth[(jd+1) % 12];
-
-
-    txt += addMoonPhases(m, lang, langVars, calVars);
-    txt += add24solterms(m, lang, langVars, calVars);
-    if (year < 1734) {
-        //add calendrical solar terms
-        txt += addCalSolterms(m, lang, langVars, calVars, 0);
-        // add Datong solar terms in 1666-1670
-        if (year > 1665.5 && year < 1670.5 && langVars.region=='default') {
-            txt += addCalSolterms(m, lang, langVars, calVars, 1);
-        }
-    }
-    
-    return txt;
-}
-
 // Print the table for one Gregorian/Julian month
 function printMonth(m,lang, year, cyear, firstMonth, langVars, calVars) {
     let cmon = addChineseMonths(m, lang, year, cyear, langVars, calVars);
@@ -847,7 +771,6 @@ function printMonth(m,lang, year, cyear, firstMonth, langVars, calVars) {
     }
     txt += '</tr>';
 
-    // 通过当月首日jd + 3 mod 7 得到首月星期
     // Determine the day of week of the first date of month
     let week1 = (calVars.jd0 + calVars.mday[m] + 3) % 7;
     
@@ -855,7 +778,6 @@ function printMonth(m,lang, year, cyear, firstMonth, langVars, calVars) {
         txt += '<tr>';
         txt += '<td colspan="'+week1+'"></td>';
     }
-    // mday 存放有个月的天数，根据上个月-下个月得出当月天数
     // # of days in the months
     let n = calVars.mday[m+1] - calVars.mday[m];
     let week;
@@ -863,7 +785,6 @@ function printMonth(m,lang, year, cyear, firstMonth, langVars, calVars) {
         week = (week1 + i - 1) % 7;
         if (week==0) txt += '<tr>';
         if (n>25) {
-            // i为当月日期
             txt += '<td><h3 style="text-align:center;">'+i+'</h3>';
         } else {
             // Gregorian calendar reform: in 1582 Oct has only 21 days.
@@ -1074,83 +995,7 @@ function addChineseMonths(m, lang, y, cyear, langVars,
     return {nMonth:nMonth, cmonth:cmonth, cmyear:cmyear};
 }
 
-function calChineseDate(y, m, d, lang, langVars, calVars, firstMonth) {
-    // dd = 当年的天序数
-    // # of days from Dec 31 in the previous year
-    let dd = calVars.mday[m] + d; 
-    
-    // Determine the month and date in Chinese calendar
-    let i, cd, longM, cmIsFirstMonth, cm=0, n=calVars.cmonthDate.length;
-    for (i=0; i<n-1; i++) {
-        if (dd >= calVars.cmonthDate[i] && dd < calVars.cmonthDate[i+1]) {
-            cm = calVars.cmonthNum[i];
-            cd = dd - calVars.cmonthDate[i] + 1;
-            longM = calVars.cmonthLong[i];
-            cmIsFirstMonth = (cm == firstMonth[calVars.cmonthYear[i]]);
-            if (y==-103 || y==700) {cmIsFirstMonth = false;}
-        }
-    }
-    
-    if (cm==0) { 
-        cm = calVars.cmonthNum[n-1];
-        cd = dd - calVars.cmonthDate[n-1] + 1;
-        longM = calVars.cmonthLong[n-1];
-        cmIsFirstMonth = (cm == firstMonth[calVars.cmonthYear[n-1]]);
-        if (y==-103 || y==700) {cmIsFirstMonth = false;}
-    }
-    
-    let txt, m1, warn;
-    
-    if (lang==0) {
-        // English
-        m1 = "0"+Math.abs(cm);
-        m1 = m1.slice(-2);
-        if (cm < 0) {
-            if (y < -104) {
-                m1 = calVars.leap;
-            } else if (y==-104) {
-                m1 = 'post 9';
-            } else {
-                m1 = 'leap '+m1;
-            }
-        }
-        let d1 = "0"+cd;
-        d1 = d1.slice(-2);
-        return m1+'-'+d1;
-    } else {
-      // Chinese
-       if (cm > 0) {
-           m1 = langVars.cmonth[cm-1]+"月";
-       } else {
-           if (y < -104) {
-               if (lang==1) {
-                   m1 = (calVars.leap=="post 9" ? "後九":"閏") + "月";
-               } else {
-                   m1 = (calVars.leap=="post 9" ? "后九":"闰") + "月";
-               }
-           } else {
-               if (lang==1) {
-                   m1 = (y==-104 ? '後':'閏') + langVars.cmonth[-cm-1] + "月";
-               } else {
-                   m1 = (y==-104 ? '后':'闰') + langVars.cmonth[-cm-1] + "月";
-               }
-           }
-       }
-       if (y>688 && y <700 && Math.abs(cm)==11) {
-            // 11 yue -> zheng yue
-            m1 = '正月';
-        }
-        if (y > 689 && y < 701 && Math.abs(cm)==1) {
-            // zheng yue -> yi yue
-            m1 = '一月';
-        }
-       return m1+langVars.date_numChi[cd-1]
-    }
-
-}
-
 function addChineseDate(y, m, d, lang, langVars, calVars, firstMonth) {
-    // dd = 当年的天序数
     // # of days from Dec 31 in the previous year
     let dd = calVars.mday[m] + d; 
     
@@ -1249,13 +1094,6 @@ function addChineseDate(y, m, d, lang, langVars, calVars, firstMonth) {
     }
     
     return txt;
-}
-
-function calSexagenaryDays(m,d,langVars, calVars) {
-    // # of days from Dec 31 in the previous year
-    let dd = calVars.mday[m] + d; 
-    let jd = calVars.jd0 + dd + 1;
-    return jd;
 }
 
 function addSexagenaryDays(m,d,langVars, calVars) {

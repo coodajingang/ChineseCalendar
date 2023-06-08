@@ -1,15 +1,49 @@
 "use strict";
 
 // Setting display menu and return region
-export function split_calendar_handler(lang, y) {
+function split_calendar_handler(lang, y) {
     let txt, disp, region = 'default';
-
+    document.getElementById("ThreeKingdoms").style.display = "none";
+    document.getElementById("SouthNorth").style.display = "none";
+    document.getElementById("SongLiaoJinYuan").style.display = "none";
+    document.getElementById("QingSouthernMing").style.display = "none";
+    
     if (y > 220.5 && y < 280.5) {
+        // Three Kingdoms period
+        document.getElementById("ThreeKingdoms").style.display = "block";
+        txt = (y > 265.5 ? ["Jin", "晋", "晋"]:["Wei", "魏", "魏"]);
+        document.getElementById("TkiWei").innerHTML = txt[lang];
+        document.getElementById("TkiShu").style.display = (y > 263.5 ? "none":"inline");
+        document.getElementById("TkiWu").style.display = (y < 221.5 ? "none":"inline");
+        let Shu = document.getElementById('TkiShu').classList.contains('active');
+        let Wu = document.getElementById('TkiWu').classList.contains('active');
+        if (Shu && y > 263.5) {
+            // Shu dynasty was conquered by Wei
+            document.getElementById('TkiShu').classList.remove('active');
+            document.getElementById('TkiWei').classList.add('active');
+            Shu = false;
+        }
+        if (Wu && y < 221.5) {
+            // Wu dynasty had not been established yet
+            document.getElementById('TkiWu').classList.remove('active');
+            document.getElementById('TkiWei').classList.add('active');
+            Wu = false;
+        }
+        disp = document.getElementById('TkiDynasty');
+        if (Shu) { 
             region = 'Shu';
+            disp.innerHTML = document.getElementById('TkiShu').innerHTML;
+        } else if (Wu) { 
             region = 'Wu';
+            disp.innerHTML = document.getElementById('TkiWu').innerHTML;
+        } else {
+            disp.innerHTML = document.getElementById('TkiWei').innerHTML;
+        }
     }
     
     if (y > 383.5 && y < 590.5) {
+        document.getElementById('SouthNorth').style.display = "block";
+        
         // South dynasties
         if (y < 419.5) {
             txt = ["Jin", "晋", "晋"];
@@ -22,6 +56,13 @@ export function split_calendar_handler(lang, y) {
         } else {
             txt = ["Chen", "陳", "陈"];
         }
+        document.getElementById('SN1South').innerHTML = txt[lang];
+        
+        // North dynasties
+        document.getElementById('SN1LaterQin').style.display = (y < 417.5 ? "inline":"none");
+        document.getElementById('SN1NorthernLiang').style.display = (y > 411.5 && y < 439.5 ? "inline":"none");
+        document.getElementById('SN1WeiZhouSui').style.display = (y > 397.5 ? "inline":"none");
+        document.getElementById('SN1WeiQi').style.display = (y > 533.5 && y < 577.5 ? "inline":"none");
         if (y < 534.5) {
             txt = ["Northern Wei", "北魏", "北魏"];
         } else if (y < 557.5) {
@@ -31,38 +72,127 @@ export function split_calendar_handler(lang, y) {
         } else {
             txt = ["Sui", "隋", "隋"];
         }
-        //document.getElementById('SN1WeiZhouSui').innerHTML = txt[lang];
+        document.getElementById('SN1WeiZhouSui').innerHTML = txt[lang];
         txt = (y < 549.5 ? ["Eastern Wei", "東魏", "东魏"]:["Northern Qi", "北齊", "北齐"]);
-        //document.getElementById('SN1WeiQi').innerHTML = txt[lang];
+        document.getElementById('SN1WeiQi').innerHTML = txt[lang];
+        
+        // Set region, default is the south dynasties
+        let LaterQin = document.getElementById('SN1LaterQin').classList.contains('active');
+        let NorthernLiang = document.getElementById('SN1NorthernLiang').classList.contains('active');
+        let WeiZhouSui = document.getElementById('SN1WeiZhouSui').classList.contains('active');
+        let WeiQi = document.getElementById('SN1WeiQi').classList.contains('active');
+        
+        if (LaterQin && y > 417.5) {
+            // Later Qin was conquered by Jin
+            document.getElementById('SN1LaterQin').classList.remove('active');
+            document.getElementById('SN1South').classList.add('active');
+            LaterQin = false;
+        }
+        if (NorthernLiang && y < 411.5) {
+            // Northern Liang didn't have its own calendar
+           document.getElementById('SN1NorthernLiang').classList.remove('active');
+            document.getElementById('SN1LaterQin').classList.add('active');
+            NorthernLiang = false; LaterQin = true;
+        }
+        if (NorthernLiang && y > 439.5) {
+            // Northern Liang was conquered by Northern Wei
+            document.getElementById('SN1NorthernLiang').classList.remove('active');
+            document.getElementById('SN1WeiZhouSui').classList.add('active');
+            NorthernLiang = false; WeiZhouSui = true;
+        }
+        if (WeiQi && (y < 533.5 || y > 577.5)) {
+            // y < 397.5 will be handled by the next if-statement
+            document.getElementById('SN1WeiQi').classList.remove('active');
+            document.getElementById('SN1WeiZhouSui').classList.add('active');
+            WeiQi = false; WeiZhouSui = true;
+        }
+        if (WeiZhouSui && y < 397.5) {
+            // Probably didn't have its own calendar
+            document.getElementById('SN1WeiZhouSui').classList.remove('active');
+            document.getElementById('SN1LaterQin').classList.add('active');
+            WeiZhouSui = false; LaterQin = true;
+        }
+        
+        disp = document.getElementById('SN1Dynasty');
+        if (LaterQin) { 
             region = 'LaterQin';
-
+            disp.innerHTML = document.getElementById('SN1LaterQin').innerHTML;
+        } else if (NorthernLiang) { 
             region = 'NorthernLiang';
-
+            disp.innerHTML = document.getElementById('SN1NorthernLiang').innerHTML;
+        } else if (WeiZhouSui) { 
             region = 'WeiZhouSui'
-
+            disp.innerHTML = document.getElementById('SN1WeiZhouSui').innerHTML;
+        } else if (WeiQi) {
             region = 'WeiQi';
-
+            disp.innerHTML = document.getElementById('SN1WeiQi').innerHTML;
+        } else {
+            disp.innerHTML = document.getElementById('SN1South').innerHTML;
+        }
     }
     
     if (y > 946.5 && y < 1279.5) {
-        //document.getElementById("SongLiaoJinYuan").style.display = "block";
-
+        document.getElementById("SongLiaoJinYuan").style.display = "block";
+        
+        // South dynasties
+        if (y < 950.5) {
+            txt = ["Later Han", "後漢", "后汉"];
+        } else if (y < 959.5) {
+            txt = ["Later Zhou", "後周", "后周"];
+        } else {
+            txt = ["Song", "宋", "宋"];
+        } 
+        document.getElementById('SN2South').innerHTML = txt[lang];
+        // North dynasties
+        if (y < 1125.5) {
+            txt = ["Liao (Khitan)", "遼/契丹", "辽/契丹"];
+        } else if (y < 1234.5) {
+            txt = ["Jin", "金", "金"];
+        } else if (y < 1270.5) {
+            txt = ["Mongol", "蒙古", "蒙古"];
+        } else {
+            txt =["Yuan (Mongol)", "元", "元"];
+        }
+        document.getElementById('SN2North').innerHTML = txt[lang];
+        
+        disp = document.getElementById('SN2Dynasty');
+        if (document.getElementById('SN2North').classList.contains('active')) {
             region = 'LiaoJinYuan';
-
+            disp.innerHTML = document.getElementById('SN2North').innerHTML;
+        } else {
+            disp.innerHTML = document.getElementById('SN2South').innerHTML;
+        }
     }
 
     if (y > 1644.5 && y < 1683.5) {
+        document.getElementById("QingSouthernMing").style.display = "block";
+        // South dynasties
+        if (y < 1661.5) {
+            txt = ["Southern Ming", "南明", "南明"];
+        } else {
+            txt = ["Zheng", "明鄭", "明郑"];
+        } 
+        document.getElementById('SN3South').innerHTML = txt[lang];
+        // North dynasties
+        txt = ["Qing", "清", "清"];
+        document.getElementById('SN3North').innerHTML = txt[lang];
+        
+        disp = document.getElementById('SN3Dynasty');
+        if (document.getElementById('SN3South').classList.contains('active')) {
             region = 'SouthernMing';
-
+            disp.innerHTML = document.getElementById('SN3South').innerHTML;
+        } else {
+            disp.innerHTML = document.getElementById('SN3North').innerHTML;
+        }
     }
     
     return region;
 }
 
 // Select calendar
-export function select_calendar_split(id, lang) {
-    // let err = //document.getElementById('err').innerHTML;
-    // if (err != "") { return;}
+function select_calendar_split(id, lang) {
+    let err = document.getElementById('err').innerHTML;
+    if (err != "") { return;}
     
     let menu, item;
     let period = id.slice(0,3);
@@ -84,7 +214,7 @@ export function select_calendar_split(id, lang) {
             break;
          }
     }
-    //document.getElementById(id).classList.add('active');
+    document.getElementById(id).classList.add('active');
     submitYear(lang);
 }
 
@@ -94,7 +224,7 @@ export function select_calendar_split(id, lang) {
 // JDw and jd_epoch are defined as
 // JD of winter solstice in year y-1 = JDw + y*solar
 // JD of conjunctions = jd_epoch + i*lunar for any integer i.
-export function get_li_parameters(li) {
+function get_li_parameters(li) {
     let lunar=0, solar=0, jd_epoch=0, JDw=0, dtc_round=0, dts_round=0;
     switch (li) {
         case "Sifen":

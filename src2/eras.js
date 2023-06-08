@@ -1,7 +1,7 @@
 "use strict";
 
 // Insert era name (年號) if appropriate
-export function eraName(year, region, li=null) {
+function eraName(year, region, li=null) {
     // set up an array of objects to store era name information
     let eras = [{y:1912, e:""}, {y:-99999, e:""}];
     let nian = "年";
@@ -782,7 +782,7 @@ export function eraName(year, region, li=null) {
     return era;
 }
 
-export function eraNameSim(year, region, li=null) {
+function eraNameSim(year, region, li=null) {
     // set up an array of objects to store era name information
     let eras = [{y:1912, e:""}, {y:-99999, e:""}];
     let nian = "年";
