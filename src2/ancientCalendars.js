@@ -487,13 +487,13 @@ function guliuli_calendar_parameters(li) {
 // first element being the first month of the year in that particular 
 // calendar in guliuli. If there are 13 months, the last month is a leap month.
 // noZhong: the index in which the month does not contain a major solar term
-// cndays: number of days in the year for the particular calendar in guliuli.
+// cndays of days in the year for the particular calendar in guliuli.
 function guliuli_calendar_cmonth(li, y, jdc) {
     let para = guliuli_calendar_parameters(li);
     let cm1 = guliuli_cmonth(y, jdc, para.yEpoch, para.jdEpoch, para.jdEpoch_lunar);
     let cmonthDate = [];
     //noZhong: index of the month without major solar term, -1 means no such month
-    // cndays: number of days in the year
+    // cndays of days in the year
     let i, cndays, noZhong = -1; 
     if (para.ziOffset==0) {
         cmonthDate = cm1.cmonthDate;

@@ -5,6 +5,7 @@ import { solarTermMoonPhase_ystart,offsets_sunMoon ,solarTerms, newMoons,firstQu
 import { decompress_moonPhases, decompress_solarTerms } from "./decompressSunMoonData"
 import { eclipse_year_range,solar_eclipse_link,lunar_eclipse_link } from "./eclipse_linksM722-2202";
 import { eraName} from "./eras"
+import { bazi_custom  } from "./bazi"
 
 
 
@@ -527,19 +528,11 @@ export function calendarDayInfo(year, month, day, lang) {
     console.log(calVars)
 
     let dayInfo = calMonthDay(day, month - 1, lang, year, cyear, firstMonth, langVars, calVars); 
-    console.log(dayInfo)
-    // for (let m=0; m<12; m++) {
-    //     txt += printMonth(m, lang, year, cyear, firstMonth, 
-    //                                 langVars, calVars);
-    // }
 
-    
-    // week 
-    // nongli 
-    // ganzhi 
-    // 月相
-    // 节气
-    // 时干支
+    let bazi = bazi_custom(year, month, day, 12, 0, 0);
+    dayInfo.bazi = bazi;
+    console.log(dayInfo)
+    return dayInfo;
 }
 
 // Set up the calendar for the Gregorian/Julian year
