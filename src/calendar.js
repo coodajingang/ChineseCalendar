@@ -686,6 +686,8 @@ export function calendar(lang, year) {
     //console.log(txt)
 }
 
+
+
 function addYearInfo(y, langVars, calVars) {
     let info = '', lang = langVars.lang, region = langVars.region;
     
