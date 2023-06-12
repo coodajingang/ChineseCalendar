@@ -3,7 +3,10 @@
 /* Gather functions related to dates and years */
 
 // Compute JD at midnight UT
-export function getJD(yyyy,mm,dd) {
+export function getJD(year,month,day) {
+    let yyyy = Number(year)
+    let mm = Number(month)
+    let dd = Number(day)
     let m1 = mm, yy = yyyy;
     if (m1 <= 2) {m1 +=12; yy--;}
     let b;

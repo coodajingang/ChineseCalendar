@@ -1,7 +1,7 @@
 import {dt_T} from "./dt"
 import { XL, pty_zty2 } from "./xl";
 import { J2000, Gan, Zhi,PI2, radd} from "./constants";
-import { createJdWithDateTime } from "./jd"
+import { dt2Jd } from "./jd"
 import { int2 } from "./math";
 
 // 将八字的计算单独抽出来 ，形成一个单独的文件 
@@ -34,23 +34,16 @@ export function bazi_now(j = 0.0, useTrueSolar = true) {
 }
 
 export function bazi_custom(year, month, day, hour, minute, second, tZOffset = -0.0, j = 0.0, useTrueSolar = true) {
-    let dt = {
-        year: year2Ayear(String(year)),
-        month: month,
-        day: day,
-        hour: hour,
-        minute: minute,
-        second: second
-    }
-    let jdInst = createJdWithDateTime(dt)
+    let jd = dt2Jd(year2Ayear(String(year)), month, day, hour, minute, second)
     let curTZ = tZOffset / 60 / 24
-    //console.log(' 儒略日数 ' +  int2(jdInst.getJD() + 0.5) + ' 距2000年首' + int2(jdInst.getJD()+0.5-J2000) + '日' + jdInst.getTimeStr())
-    //console.log('JD:' + jdInst.getJD())
-    return bazi(jdInst.getJD() - J2000, j/radd, curTZ, useTrueSolar)
+    //console.log(' 儒略日数 ' +  int2(jd + 0.5) + ' 距2000年首' + int2(jd+0.5-J2000) + '日' )
+    //console.log('JD:' + jd)
+    return bazi(jd - J2000, j/radd, curTZ, useTrueSolar)
 }
 
 export function bazi(jd , J, curTZ, useTrueSolar) {
     let res = new Object();
+    res.jd = jd + J2000
     //res.desc =  ' 儒略日数 ' + int2(jd+0.5) + ' 距2000年首' + int2(jd+0.5-J2000) + '日<br>'
     var v;
     var jd2 = jd + dt_T(jd);
@@ -59,8 +52,8 @@ export function bazi(jd , J, curTZ, useTrueSolar) {
     //console.log("jd jd2 w k" + jd + '  ' + jd2 + '  ' + w + ' '+ k)
     jd += pty_zty2(jd2 / 36525) + J / Math.PI / 2;
     //console.log('new jd ' + jd)
-    let jdInst = createJdWithDateTime({jd: jd + J2000})
-    res.tys = jdInst.getTimeStr();
+    //let jdInst = createJdWithDateTime({jd: jd + J2000})
+    //res.tys = jdInst.getTimeStr();
     jd += 13 / 24;
     var D = Math.floor(jd), SC = int2((jd - D) * 12);
     v = int2(k / 12 + 6000000);

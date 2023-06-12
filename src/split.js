@@ -1,7 +1,8 @@
 "use strict";
 
+// will-remove
 // Setting display menu and return region
-export function split_calendar_handler(lang, y) {
+function split_calendar_handler(lang, y) {
     let txt, disp, region = 'default';
 
     if (y > 220.5 && y < 280.5) {
