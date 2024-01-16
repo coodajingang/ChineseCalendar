@@ -1,10 +1,10 @@
 "use strict";
 
 import { NdaysGregJul, getJD} from "./utilities";
-import { solarTermMoonPhase_ystart,offsets_sunMoon ,solarTerms,ChineseToGregorian} from "./calendarData"
-import { decompress_solarTerms } from "./decompressSunMoonData"
+import { solarTermMoonPhase_ystart,offsets_sunMoon ,solarTerms, newMoons,firstQuarters,fullMoons,thirdQuarters ,ChineseToGregorian} from "./calendarData"
 import { bazi_custom } from "./bazi"
-
+import { decompress_moonPhases, decompress_solarTerms } from "./decompressSunMoonData"
+import { eclipse_year_range,solar_eclipse_link,lunar_eclipse_link } from "./eclipse_linksM722-2202";
 
 // use
 // Language-specific constants
@@ -181,21 +181,21 @@ function calDataYear(y, langVars) {
     
     // ** new moons, quarters and full moons in year y **
     
-    // let Q0 = (newMoons())[inds]; Q0.unshift(0);
-    // let Q1 = (firstQuarters())[inds]; Q1.unshift(1);
-    // let Q2 = (fullMoons())[inds]; Q2.unshift(2);
-    // let Q3 = (thirdQuarters())[inds]; Q3.unshift(3);
-    // Q0 = decompress_moonPhases(y, offsets.lunar, Q0, 1);
-    // Q1 = decompress_moonPhases(y, offsets.lunar, Q1, 1);
-    // Q2 = decompress_moonPhases(y, offsets.lunar, Q2, 1);
-    // Q3 = decompress_moonPhases(y, offsets.lunar, Q3, 1);
-    // // decompress moon phase data
-    // Q0 = decompress_time(Q0); Q1 = decompress_time(Q1); 
-    // Q2 = decompress_time(Q2); Q3 = decompress_time(Q3); 
+    let Q0 = (newMoons())[inds]; Q0.unshift(0);
+    let Q1 = (firstQuarters())[inds]; Q1.unshift(1);
+    let Q2 = (fullMoons())[inds]; Q2.unshift(2);
+    let Q3 = (thirdQuarters())[inds]; Q3.unshift(3);
+    Q0 = decompress_moonPhases(y, offsets.lunar, Q0, 1);
+    Q1 = decompress_moonPhases(y, offsets.lunar, Q1, 1);
+    Q2 = decompress_moonPhases(y, offsets.lunar, Q2, 1);
+    Q3 = decompress_moonPhases(y, offsets.lunar, Q3, 1);
+    // decompress moon phase data
+    Q0 = decompress_time(Q0); Q1 = decompress_time(Q1); 
+    Q2 = decompress_time(Q2); Q3 = decompress_time(Q3); 
 
-    /*
+
     // eclipses
-    //let iec = y - eclipse_year_range()[0];
+    let iec = y - eclipse_year_range()[0];
     // sol_eclipse is a 2D array that stores the info of solar 
     // eclipses in year y. It has the form 
     // [[d_eclipse1, ind_eclipse1, type_eclipse1], 
@@ -243,7 +243,7 @@ function calDataYear(y, langVars) {
         }
     });
     links = null;
-    */
+
     
     // *** Data for Chinese calendar ***
     let region = langVars.region;
@@ -333,9 +333,9 @@ function calDataYear(y, langVars) {
     let out = {jd0:jd0, mday:mday, cmonthDate:cmonthDate, cmonthXiaYear, 
                cmonthJian:cmonthJian, cmonthNum:cmonthNum, 
                cmonthYear:cmonthYear, cmonthLong:cmonthLong,             
-               //solar:solar,  Q0:Q0, Q1:Q1, Q2:Q2, Q3:Q3, year:y, 
+               solar:solar,  Q0:Q0, Q1:Q1, Q2:Q2, Q3:Q3, year:y, 
                solar:solar, year:y, 
-               //sol_eclipse:sol_eclipse, lun_eclipse:lun_eclipse};
+               sol_eclipse:sol_eclipse, lun_eclipse:lun_eclipse
     };
     if (region != 'default') {
         out.pingqi = pingqi;
@@ -467,14 +467,14 @@ function calMonthDay(d,m,lang, year, cyear, firstMonth, langVars, calVars) {
     let hDay = langVars.heaven[(jd-1) % 10];
     let eDay = langVars.earth[(jd+1) % 12];
 
-    // let moonPhases = calMoonPhases(m, lang, langVars, calVars);
+    let moonPhases = calMoonPhases(m, lang, langVars, calVars);
     let solars = cal24solterms(m, lang, langVars, calVars);
 
     result.jd = jd;
     result.week = week;
     result.gan = hDay;
     result.zhi = eDay;
-    //result.moon = moonPhases;
+    result.moon = moonPhases;
     result.solar = solars;
     result.nontli = nongliDay
     result.year = year

@@ -6,7 +6,7 @@ var nobg = !PREFER_TRANSPARENT_BG ? null
     : await importModuleOptional('no-background')
 
 // ?y=2023&m=6&d=8 
-const url_prefix = 'https://calendar.c2psevgthil.workers.dev/bazi'  
+const url_prefix = 'https://calendar.c2psevgthil.workers.dev/dayinfo'  
 
 
 async function createWidget(widgetFamily='small') {  
@@ -40,43 +40,24 @@ async function createWidget(widgetFamily='small') {
   const hGZ = bazi.hs[hIndex]
 
   const refreshDate = new Date()
-  refreshDate.setHours(hIndex*2 - 1)
-  refreshDate.setMinutes(0)
-  refreshDate.setSeconds(0)
+  refreshDate.setHours(23)
+  refreshDate.setMinutes(59)
+  refreshDate.setSeconds(59)
   refreshDate.setMilliseconds(0)
-  refreshDate.setHours(refreshDate.getHours() + 2)
+  refreshDate.setDate(refreshDate.getDate() + 1);
   widget.refreshAfterDate = refreshDate
 
-  const mainStack = widget.addStack()
+  const tailStack = widget.addStack()
+  tailStack.setPadding(0,0,0,0)
+  tailStack.centerAlignContent()
+  tailStack.layoutVertically()
+  tailStack.addText(genJieQi(bazi, 0))
+  tailStack.addSpacer()
+  tailStack.addText(genJieQi(bazi, 1))
 
-  mainStack.setPadding(0,0,0,0)
-  mainStack.centerAlignContent()
-  mainStack.layoutHorizontally()
-
-  mainStack.addSpacer()
-  addDZ(mainStack, bazi.year[0], bazi.year[1])
-  mainStack.addSpacer()
-  addDZ(mainStack, bazi.month[0], bazi.month[1])
-  mainStack.addSpacer()
-  addDZ(mainStack, bazi.day[0], bazi.day[1])
-  mainStack.addSpacer()
-  addDZ(mainStack, hGZ[0], hGZ[1])
-  mainStack.addSpacer()
   return widget
 }
 
-function addDZ(mainStack, first, second) {
-    const subStack = mainStack.addStack()
-    //subStack.borderWidth = 2
-    subStack.layoutVertically()
-    const ft = subStack.addText(first)
-    ft.centerAlignText()
-    //ft.font = Font.title1()
-    subStack.addSpacer(1.0)
-    const st = subStack.addText(second)
-    st.centerAlignText()
-    //st.font = Font.title1()
-}
 
 
 //---[ main ]-------------------------------------

@@ -89,6 +89,34 @@ router.get('/example/:text', ({ params }) => {
 	});
 });
 
+router.get('/download/:text', async ({ params }) => {
+	try {
+	let input = decodeURIComponent(params.text);
+	// Serialise the input into a base64 string
+	console.log(input)
+	
+	const url = 'https://raw.githubusercontent.com/coodajingang/ChineseCalendar/v2/scriptable/' + input;
+	// const request = new Request(url, {method: 'GET'});
+	// let res = await router.send(request)
+  
+	// console.log(res)
+	// 获取响应正文
+	const res = await fetch(url, {
+		headers: {
+			"Accept":"text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
+			"Accept-Encoding": "gzip, deflate, br",
+		  "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 Edg/120.0.0.0"
+		},
+	  });
+	  const body = await res.text();
+	// Return the HTML with the string to the client
+	return new Response(body);
+} catch (error) {
+    console.error(error);
+    return new Response('请求失败', { status: 500 });
+  }
+});
+
 /*
 This shows a different HTTP method, a POST.
 
