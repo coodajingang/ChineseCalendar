@@ -8,6 +8,7 @@
 
 ## api 
 http://127.0.0.1:8787/dayinfo?y=2023&m=1&d=5 
+http://127.0.0.1:8787/bazi?y=2023&m=1&d=5 
 
 ## ios scriptable 
 https://github.com/coodajingang/Scriptable/blob/main/calendar.js
