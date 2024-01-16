@@ -36,9 +36,6 @@ async function createWidget(widgetFamily='small') {
 
   const bazi = data.data;
 
-  const hIndex = Math.floor((hour+1)/2);
-  const hGZ = bazi.hs[hIndex]
-
   const refreshDate = new Date()
   refreshDate.setHours(23)
   refreshDate.setMinutes(59)
@@ -48,11 +45,10 @@ async function createWidget(widgetFamily='small') {
   widget.refreshAfterDate = refreshDate
 
   const tailStack = widget.addStack()
-  tailStack.setPadding(0,0,0,0)
   tailStack.centerAlignContent()
   tailStack.layoutVertically()
   tailStack.addText(genJieQi(bazi, 0))
-  tailStack.addSpacer()
+  tailStack.addSpacer(1.5)
   tailStack.addText(genJieQi(bazi, 1))
 
   return widget
@@ -92,7 +88,9 @@ function genJieQi(bazi, i) {
         return ''
     }
     const d = bazi.solar[i]
-    return d.name + ":" + d.day  + '日' + d.time
+    let dstr = '' + d.day
+    let day = dstr.length == 1 ? '0' + d.day : d.day
+    return d.name + ":" + day  + '日' + d.time
 }
 //--公共方法库-------------------
 function sfIcon(name, font) {
