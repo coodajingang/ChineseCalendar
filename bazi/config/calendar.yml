@@ -1,0 +1,47 @@
+# 八字命理系统配置文件
+
+calendar:
+  use_true_solar_time: true
+  ephemeris_source: "internal"
+  supported_year_range:
+    start: 1900
+    end: 2100
+  zone_longitude_map:
+    "Asia/Shanghai": 120.0
+    "Asia/Chongqing": 105.0
+    "Asia/Urumqi": 90.0
+    "Asia/Harbin": 135.0
+    "Asia/Tokyo": 135.0
+    "Asia/Seoul": 135.0
+    "Asia/Singapore": 105.0
+    "Asia/Hong_Kong": 120.0
+    "Asia/Taipei": 120.0
+    "America/New_York": -75.0
+    "America/Los_Angeles": -120.0
+    "Europe/London": 0.0
+    "Europe/Paris": 0.0
+
+pillar:
+  year_pillar_rule: "by_li_chun"    # by_li_chun | by_lunar_new_year
+  month_pillar_rule: "standard"
+  hour_pillar_rule: "standard"
+  day_base_reference: "1900-01-31"
+
+fortune:
+  da_yun_rule: "standard"
+  da_yun_year_step: 10
+  direction_rule: "by_gender_and_yangyin_year"
+  start_age_formula:
+    type: "linear"
+    unit: "day"
+    factor: 0.333    # 3天=1年
+    round: "floor"   # floor | ceil | round
+
+# 大运方向规则
+direction_rule:
+  type: "gender_and_year_stem_yinyang"
+  mapping:
+    "yang_male": "forward"     # 阳年男顺行
+    "yang_female": "backward"  # 阳年女逆行
+    "yin_male": "backward"     # 阴年男逆行
+    "yin_female": "forward"    # 阴年女顺行
