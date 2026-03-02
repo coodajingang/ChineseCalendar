@@ -1,0 +1,292 @@
+Metadata-Version: 2.4
+Name: bazi
+Version: 1.0.0
+Summary: 基于中国八字命理理论的 Python 实现库
+Author: BaZi Development Team
+License: GPL-3.0
+Keywords: bazi,chinese-astrology,fortune-telling,八字,命理
+Classifier: Development Status :: 4 - Beta
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: GNU General Public License v3 (GPLv3)
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.8
+Classifier: Programming Language :: Python :: 3.9
+Classifier: Programming Language :: Python :: 3.10
+Classifier: Programming Language :: Python :: 3.11
+Classifier: Programming Language :: Python :: 3.12
+Classifier: Topic :: Religion
+Classifier: Topic :: Scientific/Engineering :: Astronomy
+Requires-Python: >=3.8
+Description-Content-Type: text/markdown
+Requires-Dist: pyyaml>=6.0
+Provides-Extra: dev
+Requires-Dist: pytest>=7.0; extra == "dev"
+Requires-Dist: pytest-cov>=4.0; extra == "dev"
+Requires-Dist: black>=23.0; extra == "dev"
+Requires-Dist: isort>=5.0; extra == "dev"
+Requires-Dist: mypy>=1.0; extra == "dev"
+
+# 八字命理系统 (BaZi Fortune Telling System)
+
+基于中国八字命理理论的 Python 实现库。
+
+## 功能模块
+
+### 1. 时间地点转换模块 (TimeLocationConverter)
+
+处理出生时间的时区转换、真太阳时计算、历法转换和节气计算。
+
+**主要功能：**
+- 时区处理：支持 IANA 时区，处理夏令时
+- 真太阳时计算：基于经度的真太阳时修正
+- 历法转换：公历 ↔ 农历转换
+- 节气计算：计算最近的节气及时间差
+- 干支日期：年、月、日干支计算
+
+### 2. 四柱生成模块 (PillarGenerator)
+
+根据出生时间生成年、月、日、时四柱的天干地支。
+
+**主要功能：**
+- 年柱计算：支持以立春或正月初一划分
+- 月柱计算：根据节气划分月令
+- 日柱计算：基于基准日期的干支推算
+- 时柱计算：根据真太阳时或标准时确定时辰
+
+### 3. 命理基础数据模块 (Basic Data Services)
+
+提供天干、地支、五行、十神等基础数据查询。
+
+**主要功能：**
+- 天干数据：名称、阴阳、五行
+- 地支数据：名称、阴阳、五行、藏干
+- 十神关系：日干与其他天干的关系
+- 十二长生：五行在各支的长生状态
+- 刑冲合害破：地支关系查询
+- 神煞查询：天乙贵人、桃花、驿马等
+
+### 4. 运势推演模块 (FortuneEngine)
+
+计算大运、流年等运势信息。
+
+**主要功能：**
+- 大运计算：起运时间、顺逆行方向
+- 流年生成：每年的干支及所属大运
+- 流月/流日：细化的时间干支
+
+## 安装
+
+```bash
+pip install bazi
+```
+
+## 快速开始
+
+```python
+from bazi import (
+    TimeLocationConverter, PillarGenerator, FortuneEngine,
+    BirthInput, Location, CalendarPref, PersonInfo, PillarInput, FortuneInput
+)
+
+# 1. 创建出生信息
+birth_input = BirthInput(
+    gregorian_datetime="1990-05-21T14:35:00",
+    timezone="Asia/Shanghai",
+    location=Location(
+        city_code="CN_Shanghai",
+        latitude=31.2304,
+        longitude=121.4737
+    ),
+    calendar_pref=CalendarPref(use_true_solar_time=True)
+)
+
+# 2. 时间地点转换
+converter = TimeLocationConverter()
+time_result = converter.convert(birth_input)
+
+print(f"UTC时间: {time_result.utc_datetime}")
+print(f"真太阳时: {time_result.local_datetime_true_solar}")
+print(f"节气: {time_result.solar_term.name}")
+print(f"农历: {time_result.lunar_calendar}")
+
+# 3. 生成四柱
+pillar_input = PillarInput(time_result=time_result)
+generator = PillarGenerator()
+pillars = generator.generate(pillar_input)
+
+print(f"年柱: {pillars.year_pillar.ganzhi}")
+print(f"月柱: {pillars.month_pillar.ganzhi}")
+print(f"日柱: {pillars.day_pillar.ganzhi}")
+print(f"时柱: {pillars.hour_pillar.ganzhi}")
+
+# 4. 计算运势
+fortune_input = FortuneInput(
+    pillars=pillars,
+    time_result=time_result,
+    person_info=PersonInfo(gender="male")
+)
+engine = FortuneEngine()
+fortune = engine.calc_fortune(fortune_input)
+
+for da_yun in fortune.da_yun[:5]:
+    print(f"大运{da_yun.index}: {da_yun.ganzhi} ({da_yun.start_age}-{da_yun.end_age}岁)")
+```
+
+## 模块详解
+
+### 时间地点转换
+
+```python
+from bazi import TimeLocationConverter, BirthInput, Location
+
+converter = TimeLocationConverter()
+
+input_data = BirthInput(
+    gregorian_datetime="1990-05-21T14:35:00",
+    timezone="Asia/Shanghai",
+    location=Location(latitude=31.2304, longitude=121.4737)
+)
+
+result = converter.convert(input_data)
+
+# 结果包含:
+# - UTC 时间
+# - 本地标准时间
+# - 真太阳时 (如启用)
+# - 节气信息
+# - 农历日期
+# - 干支日期
+```
+
+### 四柱生成
+
+```python
+from bazi import PillarGenerator, PillarInput
+
+generator = PillarGenerator()
+
+pillar_input = PillarInput(
+    time_result=time_result,
+    pillar_config=PillarConfig(
+        year_pillar_rule="by_li_chun",  # 以立春划分年柱
+        month_pillar_rule="standard",
+        hour_pillar_rule="standard"
+    )
+)
+
+pillars = generator.generate(pillar_input)
+```
+
+### 基础数据查询
+
+```python
+from bazi import StemRepository, BranchRepository, TenGodService, ShenShaService
+
+stem_repo = StemRepository()
+branch_repo = BranchRepository()
+
+# 获取天干信息
+stem = stem_repo.get_by_name("甲")
+print(f"甲: {stem.yin_yang.value} {stem.element.value}")
+
+# 获取地支藏干
+branch = branch_repo.get_by_name("寅")
+for hidden in branch.hidden_stems:
+    print(f"藏干: {hidden.stem}, 权重: {hidden.weight}")
+
+# 十神关系
+ten_god_service = TenGodService(stem_repo)
+relation, god_enum = ten_god_service.get_relation("甲", "丙")
+print(f"甲见丙: {relation}")  # 食神
+
+# 神煞查询
+shen_sha = ShenShaService()
+print(f"甲日天乙贵人: {shen_sha.get_tian_yi_gui_ren('甲')}")
+```
+
+### 运势推演
+
+```python
+from bazi import FortuneEngine, FortuneInput, PersonInfo
+
+engine = FortuneEngine()
+
+fortune_input = FortuneInput(
+    pillars=pillars,
+    time_result=time_result,
+    person_info=PersonInfo(gender="male"),
+    fortune_config=DaYunConfig(
+        da_yun_year_step=10,
+        direction_rule="by_gender_and_yangyin_year"
+    ),
+    scope=FortuneScope(start_age=0, end_age=80)
+)
+
+fortune = engine.calc_fortune(fortune_input)
+
+# 大运
+for da_yun in fortune.da_yun:
+    print(f"{da_yun.ganzhi}: {da_yun.start_age}-{da_yun.end_age}岁")
+
+# 流年
+for liu_nian in fortune.liu_nian[:10]:
+    print(f"{liu_nian.year}年: {liu_nian.ganzhi} ({liu_nian.age}岁)")
+```
+
+## 配置
+
+支持通过 YAML 文件配置系统参数：
+
+```yaml
+# config/calendar.yml
+calendar:
+  use_true_solar_time: true
+  ephemeris_source: "internal"
+  supported_year_range:
+    start: 1900
+    end: 2100
+
+pillar:
+  year_pillar_rule: "by_li_chun"
+  month_pillar_rule: "standard"
+
+fortune:
+  da_yun_year_step: 10
+  direction_rule: "by_gender_and_yangyin_year"
+```
+
+```python
+from bazi import BaziConfig
+
+config = BaziConfig.from_yaml("config/calendar.yml")
+```
+
+## 项目结构
+
+```
+bazi/
+├── __init__.py          # 主入口
+├── config/              # 配置模块
+│   ├── __init__.py
+│   ├── settings.py      # 配置类
+│   └── calendar.yml     # 默认配置
+├── models/              # 数据模型
+│   ├── __init__.py
+│   ├── base.py          # 基础类型
+│   ├── time_location.py # 时间地点模型
+│   ├── pillar.py        # 四柱模型
+│   └── fortune.py       # 运势模型
+├── services/            # 服务模块
+│   ├── __init__.py
+│   ├── basic_data.py    # 基础数据服务
+│   ├── time_location.py # 时间地点服务
+│   ├── pillar.py        # 四柱服务
+│   └── fortune.py       # 运势服务
+└── utils/               # 工具函数
+    ├── __init__.py
+    └── helpers.py
+```
+
+## 许可证
+
+GPL-3.0
