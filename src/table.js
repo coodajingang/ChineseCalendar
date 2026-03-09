@@ -1769,7 +1769,7 @@ function printWarningMessage(y, langCon) {
         } else if (lang==1) {
             warn ='<p style="color:red;">《三千五百年历日天象》的正文與其附表3的資料不一致，正文記502年閏五月，附表3則為閏四月。</p>';
         } else {
-            warn = '<p style="color:red;">《三千五百年历日天象》的正文与其附表3的资料不一致，正文记575年闰五月，附表3则为闰四月。</p>';
+            warn = '<p style="color:red;">《三千五百年历日天象》的正文与其附表3的资料不一致，正文记502年闰五月，附表3则为闰四月。</p>';
         }
     }
     
@@ -1873,6 +1873,16 @@ function printWarningMessage(y, langCon) {
             warn = '<p style="color:red;">《三千五百年历日天象》記萬曆三十七年(1609年)正月癸未朔(2月4日)，不合當年的《大統曆》曆書(甲申朔, 2月5日)，見《國家圖書館藏明代大統曆日彙編》第五冊第67頁。</p>';
         } else {
             warn = '<p style="color:red;">《三千五百年历日天象》记万历三十七年(1609年)正月癸未朔(2月4日)，不合当年的《大统历》历书(甲申朔, 2月5日)，见《国家图书馆藏明代大统历日汇编》第五册第67页。</p>';
+        }
+    }
+
+    if (y==1670 && langCon.region != 'SouthernMing') {
+        if (lang==0) {
+            warn = '<p style="color:red;">The Chinese New Year in 1662 was originally on Feb. 19. There was a leap month after month 7 in 1661 and two major solar terms (Z11 and Z12) in month 11. The major solar term Z1 was originally placed on the last day of month 12 in 1661, leaving the first month in 1662 without a major solar term. To avoid controversy, the New Year Day was moved to Feb. 18 so that the first month would contain Z1, thus moving the month without major solar term to the last month of 1661.</p>';
+        } else if (lang==1) {
+            warn = '<p style="color:red;">康熙元年正月初一本在丙子日(2月19日)，事緣順治十八年閏七月，當年十一月含冬至和大寒兩中氣，雨水本來定在十二月晦，但這使康熙元年正月不含中氣。為免遭人非議，欽天監將正月初一提前一日至乙亥日(2月18日)，使正月含雨水，無中氣月便移到十二月。</p>';
+        } else {
+            warn = '<p style="color:red;">康熙元年正月初一本在丙子日(2月19日)，事缘顺治十八年闰七月，当年十一月含冬至和大寒两中气，雨水本来定在十二月晦，但这使康熙元年正月不含中气。为免遭人非议，钦天监将正月初一提前一日至乙亥日(2月18日)，使正月含雨水，无中气月便移到十二月。</p>';
         }
     }
 

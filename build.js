@@ -107,7 +107,7 @@ async function build() {
   }
   
   // header_min.js
-  if (all || opt.header_min) {
+  if (all || opt.header || opt.header_min) {
     console.log('Minifying header.js...');
     let code = {'header.js': fs.readFileSync(src+'header.js', 'utf8')};
     let mini = await minify(code);
@@ -115,7 +115,7 @@ async function build() {
   }
   
   // index_c.js
-  if (all || opt.index_c) {
+  if (all || opt.index_c || opt.header) {
     console.log('Building index_c.js...');
     let code = {
      'header.js': fs.readFileSync(src+'header.js', 'utf8'),
@@ -133,7 +133,7 @@ async function build() {
   }
   
   // table_c.js
-  if (all || opt.table_c) {
+  if (all || opt.table_c || opt.header) {
     console.log('Building table_c.js...');
     let code = {
      'header.js': fs.readFileSync(src+'header.js', 'utf8'),
@@ -150,14 +150,14 @@ async function build() {
   }
   
   // sunMoon_c.js
-  if (all || opt.sunMoon_c) {
+  if (all || opt.sunMoon_c || opt.header) {
     console.log('Building sunMoon_c.js...');
     let code = {
      'header.js': fs.readFileSync(src+'header.js', 'utf8'),
      'decompressSunMoonData.js': fs.readFileSync(src+'decompressSunMoonData.js', 'utf8'),
      'sunMoon.js': fs.readFileSync(src+'sunMoon.js', 'utf8'),
      'sunMoonData.js': fs.readFileSync(src+'sunMoonData.js', 'utf8'),
-     'eclipse_linksM3502-3502.js': fs.readFileSync(src+'eclipse_linksM3502-3502.js', 'utf8'),
+     'eclipse_linksM3502-3503.js': fs.readFileSync(src+'eclipse_linksM3502-3503.js', 'utf8'),
      'utilities.js': fs.readFileSync(src+'utilities.js', 'utf8')
      };
     let combined = await minify(code);
@@ -165,7 +165,7 @@ async function build() {
   }
   
   // Julian_c.js
-  if (all || opt.Julian_c) {
+  if (all || opt.Julian_c || opt.header) {
     console.log('Building Julian_c.js...');
     let code = {
      'header.js': fs.readFileSync(src+'header.js', 'utf8'),
@@ -206,7 +206,7 @@ async function build() {
   
   // Other html files
   files = ['era_names', 'era_names_simp', 'solarTerms', 'solarTerms_chinese', 
-           'table', 'table_chinese', 'table_simp',
+           'table', 'table_chinese', 'table_simp', 'li', 'li_chinese', 'li_simp', 
            'solarTerms_simp', 'sexagenary', 'sexagenary_chinese', 'sexagenary_simp',
            'rules', 'rules_chinese', 'rules_simp', 'examples', 'examples_chinese',
            'examples_simp', 'rules_demysterified', 'rules_demysterified_chinese',
@@ -228,7 +228,7 @@ async function build() {
            'QingSouthernMingZheng_calendars_simp', 'N1676_Zheng', 'N1676_Zheng_chinese', 
            'N1676_Zheng_simp', 'N1677_Zheng', 'N1677_Zheng_chinese', 'N1677_Zheng_simp', 
            'N1671_Zheng', 'N1671_Zheng_chinese', 'N1671_Zheng_simp', 'faq', 'faq_chinese',
-           'faq_simp'];
+           'faq_simp', 'leap_month_1_12', 'leap_month_1_12_chinese', 'leap_month_1_12_simp'];
   files.forEach(async function(f, ind) {
     if (!all && !opt[f]) {
       return;

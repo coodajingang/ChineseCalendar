@@ -312,9 +312,9 @@ function calDataYear_info_chunqiu(y, jdc, ndays) {
                 m = i+1;
                 if (m==13) { m = -12;}
                 if (i==n-1) {
-                    d = cmdate0.cmonthDate[i+1] - cmdate0.cmonthDate[i];
-                } else {
                     d = cmdate.cmonthDate[0] - cmdate0.cmonthDate[i];
+                } else {
+                    d = cmdate0.cmonthDate[i+1] - cmdate0.cmonthDate[i];
                 }
                 cmonthDate.push(cmdate0.cmonthDate[i]);
                 cmonthXiaYear.push(0); // doesn't matter since it's not used
@@ -610,8 +610,8 @@ function calDataYear_info_guliuli(li, y, jdc, ndays) {
         if (m==13) { m = -12; jian = -10;}
         if (para.ziOffset==-1) {
             m = 11 + i;
+            if (m > 21+leap) { yearOffset = 1;}
             if (m > 12) { m -= 12;}
-            if (m > 9+leap) { yearOffset = 1;}
             if (m==10 && leap==1) { m = -9; jian = -9;}
             if (m==11) { m = 10;}
         } else if (para.ziOffset > 0) {
